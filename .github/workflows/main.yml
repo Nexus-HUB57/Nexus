@@ -1,0 +1,41 @@
+
+name: NAC Arbitrage Core Automation
+
+on:
+  schedule:
+    - cron: '*/30 * * * *' # Executa a cada 30 minutos
+  workflow_dispatch: # Permite execução manual
+
+jobs:
+  arbitrage-cycle:
+    name: Arbitrage Node ${{ matrix.worker }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        worker: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Execute NAC Arbitrage Core
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEXUS_API_KEY: ${{ secrets.NEXUS_API_KEY }}
+          NEXUS_SECRET_KEY: ${{ secrets.NEXUS_SECRET_KEY }}
+          WORKER_ID: ${{ matrix.worker }}
+          BLOCK_HEIGHT: 938355
+        run: |
+          echo "Iniciando ciclo de arbitragem no núcleo ${{ matrix.worker }}..."
+          npm run arbitrage -- --worker=${{ matrix.worker }} --mainnet-sync=true
+          echo "Ciclo concluído para o nó ${{ matrix.worker }}. Ativos consolidados no Master Vault."
